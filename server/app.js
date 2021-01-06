@@ -1,5 +1,5 @@
 const express = require('express')
-const port = 5000
+const port = 7000
 //const helmet = require('helmet')
 const router = require('./routes/controller.js')
  
@@ -10,4 +10,4 @@ app.use('/',router)
  
 app.listen(port,() => {
 	console.log('Listening to port ' + port);
-})
+})	

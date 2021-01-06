@@ -196,18 +196,10 @@
         </span>
         <template v-else>{{item.invoiceNo}}</template>
       </template>
-      <template v-slot:item.dateEntry="{ item }">
-        <h5>{{moment(item.dateEntry).format("L LT")}}</h5>
-      </template>
-      <template v-slot:item.totalamount="{ item }">
-        <h5>₱ {{mGetTotalAmount(item)}}</h5>
-      </template>
-      <template v-slot:item.totalgross="{ item }">
-        <h5>₱ {{mGetTotalGross(item)}}</h5>
-      </template>
-      <template v-slot:item.totalnet="{ item }">
-        <h5>₱ {{mGetTotalNet(item)}}</h5>
-      </template>
+      <template v-slot:item.dateEntry="{ item }">{{moment(item.dateEntry).format("L LT")}}</template>
+      <template v-slot:item.totalamount="{ item }">₱ {{mGetTotalAmount(item)}}</template>
+      <template v-slot:item.totalgross="{ item }">₱ {{mGetTotalGross(item)}}</template>
+      <template v-slot:item.totalnet="{ item }">₱ {{mGetTotalNet(item)}}</template>
       <template v-slot:item.Fullname="{ item }">
         <span v-if="strFilterCustomer">
           <template

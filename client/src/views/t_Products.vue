@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid>
+  <v-container fluid class="pa-0">
     <v-slide-x-transition hide-on-leave>
       <items v-if="sProductID==1"></items>
     </v-slide-x-transition>

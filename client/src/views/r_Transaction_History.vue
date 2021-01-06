@@ -69,18 +69,10 @@
         </span>
         <template v-else>{{item.invoiceNo}}</template>
       </template>
-      <template v-slot:item.dateEntry="{ item }">
-        <h5>{{moment(item.dateEntry).format("L LT")}}</h5>
-      </template>
-      <template v-slot:item.totalPurchase="{ item }">
-        <h5>₱ {{item.totalPurchase}}</h5>
-      </template>
-      <template v-slot:item.recievedcash="{ item }">
-        <h5>₱ {{item.totalPurchase}}</h5>
-      </template>
-      <template v-slot:item.change="{ item }">
-        <h5>₱ {{item.change}}</h5>
-      </template>
+      <template v-slot:item.dateEntry="{ item }">{{moment(item.dateEntry).format("L LT")}}</template>
+      <template v-slot:item.totalPurchase="{ item }">₱ {{item.totalPurchase}}</template>
+      <template v-slot:item.recievedcash="{ item }">₱ {{item.totalPurchase}}</template>
+      <template v-slot:item.change="{ item }">₱ {{item.change}}</template>
       <template v-slot:item.Fullname="{ item }">
         <span v-if="strFilterCustomer">
           <template
@@ -177,11 +169,21 @@
                 </thead>
                 <tbody>
                   <tr v-for="item in sales_product" :key="item.code">
-                    <td style="border:0;text-align:center">{{item.qty}}</td>
-                    <td style="border:0">{{mgetUnit(item)}}</td>
-                    <td style="border:0">{{mgetItemName(item)}}</td>
-                    <td style="border:0;text-align:center">{{mgetPrice(item)}}</td>
-                    <td style="border:0;text-align:center">{{mgetAmount(item)}}</td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{item.qty}}</h5>
+                    </td>
+                    <td style="border:0">
+                      <h5>{{mgetUnit(item)}}</h5>
+                    </td>
+                    <td style="border:0">
+                      <h5>{{mgetItemName(item)}}</h5>
+                    </td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{mgetPrice(item)}}</h5>
+                    </td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{mgetAmount(item)}}</h5>
+                    </td>
                   </tr>
                 </tbody>
               </template>

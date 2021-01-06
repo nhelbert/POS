@@ -1,326 +1,475 @@
 <template>
   <div>
-    <v-data-table
-      :headers="headers"
-      :items="mFilterItems()"
-      item-key="itemcode"
-      class="transparent"
-      :page.sync="intpage"
-      hide-default-footer
-      @page-count="intpageCount = $event"
-    >
-      <template v-slot:top>
-        <v-row class="space-around" justify="center">
-          <v-col cols="auto">
-            <v-text-field
-              dense
-              hide-details
-              solo
-              v-model="strFilterItem"
-              label="Search"
-              append-icon="mdi-magnify"
-            ></v-text-field>
-          </v-col>
-        </v-row>
-      </template>
-      <template v-slot:item.itemcode="{ item }">
-        <span v-if="strFilterItem">
-          <template
-            v-for="(fragment, i) in item.itemcode.toString().split(new RegExp(`(?<=${strFilterItem})|(?=${strFilterItem})`, 'i'))"
-          >
-            <mark
-              v-if="fragment.toLowerCase() === strFilterItem.toLowerCase()"
-              :key="i"
-              class="highlight"
-            >{{fragment}}</mark>
-            <template v-else>{{fragment}}</template>
-          </template>
-        </span>
-        <template v-else>{{item.itemcode}}</template>
-      </template>
-      <template v-slot:item.itemname="{ item }">
-        <span v-if="strFilterItem">
-          <template
-            v-for="(fragment, i) in item.itemname.toString().split(new RegExp(`(?<=${strFilterItem})|(?=${strFilterItem})`, 'i'))"
-          >
-            <mark
-              v-if="fragment.toLowerCase() === strFilterItem.toLowerCase()"
-              :key="i"
-              class="highlight"
-            >{{fragment}}</mark>
-            <template v-else>{{fragment}}</template>
-          </template>
-        </span>
-        <template v-else>{{item.itemname}}</template>
-      </template>
-
-      <template v-slot:item.actualprice="{item}">₱ {{item.actualprice}}</template>
-      <template v-slot:item.price="{item}">₱ {{item.price}}</template>
-      <template v-slot:item.unitid="{item}">{{mgetUnit(item.unitid)}}</template>
-      <template v-slot:item.supplierId="{item}">{{mgetSupplier(item.supplierId)}}</template>
-      <template v-slot:item.expiryDate="{ item }">
-        <h5>{{moment(item.expiryDate).format("L LT")}}</h5>
-      </template>
-      <template v-slot:item.action="{item}">
-        <v-icon color="purple" @click="mEdit(item)">mdi-pencil-box</v-icon>
-
-        <a-popconfirm placement="topRight" ok-text="Yes" cancel-text="No" @confirm="mdeleteitem()">
-          <template slot="title">
-            <p>Delete this Item ?</p>
-          </template>
-          <v-icon color="red" @click="mSelectitem(item)">mdi-delete</v-icon>
-        </a-popconfirm>
-      </template>
-      <template v-slot:footer>
-        <v-row justify="space-around">
-          <v-col align="center" cols="auto" class="pa-0">
-            <v-pagination
-              v-model="intpage"
-              :length="intpageCount"
-              prev-icon="mdi-menu-left"
-              next-icon="mdi-menu-right"
-            ></v-pagination>
-          </v-col>
-        </v-row>
-      </template>
-    </v-data-table>
-
-    <v-dialog v-model="dialogEdit" persistent max-width="700px">
-      <v-card id="card">
-        <v-card-title>
-          <span style="color:blue">Edit Item</span>
-        </v-card-title>
-        <v-card-text>
-          <v-row justify="space-around">
-            <v-col cols="12">
-              <v-text-field
-                class="text-center"
-                dense
-                outlined
-                hide-details
-                v-model="stritemcode"
-                label="Item Code"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field dense outlined hide-details v-model="stritemname" label="Item Name"></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="intactualprice"
-                label="Actual Price"
-                prefix="₱"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="intprice"
-                label="Price"
-                prefix="₱"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="intminimumQty"
-                label="Minimum Quantity"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="intactualQty"
-                label="Actual Quantity"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-autocomplete
-                label="Unit"
-                v-model="intunitid"
-                :items="objUnits"
-                item-text="unitname"
-                item-value="unitid"
-                dense
-                outlined
-                hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="6">
-              <v-autocomplete
-                label="Supplier"
-                v-model="intsupplierId"
-                :items="objSupplier"
-                item-text="name"
-                item-value="supplierId"
-                dense
-                outlined
-                hide-details
-              ></v-autocomplete>
-            </v-col>
-
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="dtexpiryDate"
-                label="Expiry Date"
-                type="date"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <v-btn color="error" block class="mt-2" @click="dialogEdit = false">Cancel</v-btn>
-            </v-col>
-            <v-col>
-              <v-btn
-                :disabled="mCheckEdit()"
-                color="primary"
-                block
-                class="mt-2"
-                @click="mUpdateItem()"
+    <v-row justify="space-around" class="ma-0">
+      <v-col cols="4">
+        <v-card id="MyCard">
+          <v-card-title>Item Monitoring</v-card-title>
+          <v-card-text>
+            <a-input-search placeholder="Search" @input="mChangeSearch()" v-model="strFilterItem"></a-input-search>
+            <a-list
+              class="mt-2"
+              id="MyDiv2"
+              size="small"
+              item-layout="horizontal"
+              :data-source="cFilterItems"
+              bordered
+            >
+              <a-list-item
+                :id="mChangeSpace(item.itemcode)"
+                :style="`background-color:${item.itemcode==stritemcode?'#90CAF9':''}`"
+                slot="renderItem"
+                slot-scope="item"
               >
-                <v-icon>mdi-content-save-edit</v-icon>Update
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+                <a-list-item-meta @click="mEdit(item)">
+                  <span slot="title">
+                    <span
+                      :style="`color:${item.actualQty <(item.minimumQty /2) ? 'red':''}`"
+                    >{{`Item Name:`}}{{item.itemname}}</span>
+                  </span>
+                  <span slot="description">
+                    {{`Item Code:`}}
+                    {{item.itemcode}}
+                    <!-- {{`Minimum QTY:`}}
+                <span
+                  class="black--text"
+                >{{item.minimumQty +' '+ mgetUnit(item.unitid)}}</span>
+                |
+                {{`Actual QTY:`}}
+                <span
+                  class="black--text"
+                >{{item.actualQty +' '+ mgetUnit(item.unitid)}}</span>
+                |
+                {{`Supplier:`}}
+                <span
+                  class="black--text"
+                >{{mgetSupplier(item.supplierId)}}</span>
+                |
+                {{`Expiry:`}}
+                <span
+                  class="black--text"
+                    >{{moment(item.expiryDate).format("L")}}</span>-->
+                  </span>
+                </a-list-item-meta>
+                <!-- <div slot="extra">
+              <v-icon color="purple" @click="mEdit(item)">mdi-pencil-box</v-icon>
+              <a-popconfirm
+                placement="topRight"
+                ok-text="Yes"
+                cancel-text="No"
+                @confirm="mdeleteitem()"
+              >
+                <template slot="title">
+                  <p>Delete this Item ?</p>
+                </template>
+                <v-icon color="red" @click="mSelectitem(item)">mdi-delete</v-icon>
+              </a-popconfirm>
+                </div>-->
+              </a-list-item>
+            </a-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+      <v-col cols="8">
+        <v-card id="MyCard">
+          <v-card-text>
+            <a-result
+              v-if="cFilterItems.length==0"
+              status="404"
+              title="No Data Found"
+              :sub-title="`${strFilterItem !='' ? 'No search found for '  + strFilterItem +'.': 'Please add item.'}`"
+            >
+              <template #extra>
+                <a-button
+                  v-if="strFilterItem !=''"
+                  @click="strFilterItem=''"
+                  type="primary"
+                >Clear Filter</a-button>
+                <a-button @click="mAddNew()" style="background-color:green;color:white">Add New Item</a-button>
+              </template>
+            </a-result>
+            <v-card v-if="cFilterItems.length!=0" color="#632175">
+              <v-row justify="space-around">
+                <v-col cols="auto">
+                  <a-statistic title="Actual Price" :value="intactualprice" :precision="2">
+                    <template #prefix>
+                      <span>₱</span>
+                    </template>
+                  </a-statistic>
+                </v-col>
+                <v-col cols="auto">
+                  <a-statistic title="Price" :value="intprice" :precision="2">
+                    <template #prefix>
+                      <span>₱</span>
+                    </template>
+                  </a-statistic>
+                </v-col>
+              </v-row>
+            </v-card>
+            <v-card v-if="cFilterItems.length!=0" color="#3b2e5a" class="mt-2">
+              <v-row justify="space-around">
+                <v-col cols="auto">
+                  <a-statistic
+                    :precision="2"
+                    title="Percentage"
+                    :value="cPercentage"
+                    suffix="%"
+                    :value-style="{color : `${intactualQty<(intminimumQty/2) ? 'red':'#3f8600'}` }"
+                    style="margin-right: 50px"
+                  >
+                    <template #prefix>
+                      <a-icon v-if="intactualQty<(intminimumQty/2)" type="arrow-down" />
+                      <a-icon v-else type="arrow-up" />
+                    </template>
+                  </a-statistic>
+                </v-col>
+                <v-col cols="auto">
+                  <a-statistic :precision="2" title="Actual Quantity" :value="intactualQty">
+                    <template #suffix>
+                      <span>{{mgetUnit(intunitid)}}</span>
+                    </template>
+                  </a-statistic>
+                </v-col>
+                <v-col cols="auto">
+                  <a-statistic :precision="2" title="Maximum Quantity" :value="intminimumQty">
+                    <template #suffix>
+                      <span>{{mgetUnit(intunitid)}}</span>
+                    </template>
+                  </a-statistic>
+                </v-col>
+              </v-row>
+            </v-card>
+            <v-row v-if="cFilterItems.length!=0" no-gutters>
+              <v-col cols="5">
+                <v-card color="#394989" class="mt-2 mr-2">
+                  <v-card-title class="blue--text">
+                    <v-spacer></v-spacer>
+                    <v-icon left color="blue">mdi-plus-outline</v-icon>Add Quantity
+                    <v-spacer></v-spacer>
+                  </v-card-title>
+                  <v-card-text>
+                    <a-form layout="vertical">
+                      <a-form-item
+                        class="mb-0"
+                        labelAlign="left"
+                        label="Input Quantity :"
+                        style="width:100%"
+                      >
+                        <a-input-number
+                          id="barcode"
+                          :min="0"
+                          style="width:100%"
+                          v-model="intAddQty"
+                        />
+                      </a-form-item>
+                    </a-form>
 
-    <v-dialog v-model="dialogAdd" persistent max-width="700px">
-      <v-card id="card">
-        <v-card-title>
-          <span style="color:blue">Add New Item</span>
-        </v-card-title>
-        <v-card-text>
-          <v-row justify="space-around">
-            <v-col cols="12">
-              <v-text-field
-                class="text-center"
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.itemcode"
-                label="Item Code"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.itemname"
-                label="Item Name"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.actualprice"
-                label="Actual Price"
-                prefix="₱"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.price"
-                label="Price"
-                prefix="₱"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.minimumQty"
-                label="Minimum Quantity"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.actualQty"
-                label="Actual Quantity"
-                type="number"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-autocomplete
-                label="Unit"
-                v-model="objNewItem.unitid"
-                :items="objUnits"
-                item-text="unitname"
-                item-value="unitid"
-                dense
-                outlined
-                hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="6">
-              <v-autocomplete
-                label="Supplier"
-                v-model="objNewItem.supplierId"
-                :items="objSupplier"
-                item-text="name"
-                item-value="supplierId"
-                dense
-                outlined
-                hide-details
-              ></v-autocomplete>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewItem.expiryDate"
-                label="Expiry Date"
-                type="date"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <v-btn color="error" block class="mt-2" @click="dialogAdd = false">Cancel</v-btn>
-            </v-col>
-            <v-col>
-              <v-btn :disabled="mCheckAdd()" color="primary" block class="mt-2" @click="mAddItem()">
-                <v-icon>mdi-content-save-edit</v-icon>Save
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+                    <v-row justify="space-around">
+                      <v-col cols="6">
+                        <a-button
+                          block
+                          type="danger"
+                          :disabled="intAddQty==0"
+                          @click="intAddQty=0"
+                          icon="close"
+                        >Clear</a-button>
+                      </v-col>
+                      <v-col cols="6">
+                        <a-button
+                          block
+                          :disabled="intAddQty==0"
+                          icon="plus-circle"
+                          type="primary"
+                          @click="mAddMinusItem(1)"
+                        >Add</a-button>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+                <v-card color="#394989" class="mt-2 mr-2">
+                  <v-card-title class="red--text">
+                    <v-spacer></v-spacer>
+                    <v-icon left color="red">mdi-minus-box-outline</v-icon>Deduct Quantity
+                    <v-spacer></v-spacer>
+                  </v-card-title>
+                  <v-card-text>
+                    <a-form layout="vertical">
+                      <a-form-item
+                        class="mb-0"
+                        labelAlign="left"
+                        label="Input Quantity :"
+                        style="width:100%"
+                      >
+                        <a-input-number
+                          id="barcode"
+                          :min="0"
+                          style="width:100%"
+                          v-model="intDeductQty"
+                        />
+                      </a-form-item>
+                    </a-form>
 
-    <v-btn bottom color="green" dark fab fixed right @click="mAddNew()">
+                    <v-row justify="space-around">
+                      <v-col cols="6">
+                        <a-button
+                          block
+                          type="danger"
+                          :disabled="intDeductQty==0"
+                          @click="intDeductQty=0"
+                          icon="close"
+                        >Clear</a-button>
+                      </v-col>
+                      <v-col cols="6">
+                        <a-button
+                          block
+                          :disabled="intDeductQty==0"
+                          icon="minus-circle"
+                          type="primary"
+                          @click="mAddMinusItem(2)"
+                        >Deduct</a-button>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+              <v-col cols="7">
+                <v-card color="#394989" class="mt-2 ml-2">
+                  <v-card-title>
+                    <v-icon left>mdi-information-variant</v-icon>Item Information
+                    <v-spacer></v-spacer>
+                    <a-button v-if="blnEdit==false" @click="blnEdit=true" icon="edit">Edit</a-button>
+                    <a-button
+                      v-else
+                      :disabled="mCheckEdit()"
+                      key="submit"
+                      icon="save"
+                      type="primary"
+                      @click="mUpdateItem()"
+                    >Update</a-button>
+                  </v-card-title>
+                  <v-card-text>
+                    <a-form layout="inline" :label-col="{ span: 8 }" :wrapper-col="{ span: 16 }">
+                      <a-form-item
+                        labelAlign="left"
+                        label="Item Code"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-input :disabled="!blnEdit" v-model="stritemcode"></a-input>
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Item Name"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-input :disabled="!blnEdit" v-model="stritemname"></a-input>
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Actual Price"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-input-number
+                          :disabled="!blnEdit"
+                          :min="1"
+                          style="width:100%"
+                          v-model="intactualprice"
+                        />
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Price"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-input-number
+                          :disabled="!blnEdit"
+                          :min="1"
+                          style="width:100%"
+                          v-model="intprice"
+                        />
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Maximum Quantity"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-input-number
+                          :disabled="!blnEdit"
+                          :min="1"
+                          style="width:100%"
+                          v-model="intminimumQty"
+                        />
+                      </a-form-item>
+                      <!-- <a-form-item
+                    labelAlign="left"
+                    label="Actual Quantity"
+                    required
+                    style="width:100%"
+                  >
+                    <a-input-number :min="1" style="width:100%" v-model="intactualQty" />
+                      </a-form-item>-->
+                      <a-form-item
+                        labelAlign="left"
+                        label="Unit"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-select :disabled="!blnEdit" v-model="intunitid" allowClear>
+                          <a-select-option
+                            v-for="i in objUnits"
+                            :key="i.unitid"
+                            :value="i.unitid"
+                          >{{i.unitname}}</a-select-option>
+                        </a-select>
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Supplier"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-select :disabled="!blnEdit" v-model="intsupplierId" allowClear>
+                          <a-select-option
+                            v-for="i in objSupplier"
+                            :key="i.supplierId"
+                            :value="i.supplierId"
+                          >{{i.name}}</a-select-option>
+                        </a-select>
+                      </a-form-item>
+                      <a-form-item
+                        labelAlign="left"
+                        label="Expiry Date"
+                        :required="blnEdit"
+                        style="width:100%"
+                      >
+                        <a-date-picker
+                          :disabled="!blnEdit"
+                          v-model="dtexpiryDate"
+                          style="width:100%"
+                        />
+                      </a-form-item>
+                    </a-form>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <a-modal v-model="dialogEdit" centered title="Edit Item" :maskClosable="false">
+      <template slot="footer">
+        <a-button key="back" @click="dialogEdit=false">Cancel</a-button>
+        <a-button
+          :disabled="mCheckEdit()"
+          key="submit"
+          icon="save"
+          type="primary"
+          @click="mUpdateItem()"
+        >Update</a-button>
+      </template>
+      <a-form layout="inline" :label-col="{ span: 7 }" :wrapper-col="{ span: 17 }">
+        <a-form-item labelAlign="left" label="Item Code" required style="width:100%">
+          <a-input v-model="stritemcode"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Item Name" required style="width:100%">
+          <a-input v-model="stritemname"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Actual Price" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="intactualprice" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Price" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="intprice" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Minimum Quantity" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="intminimumQty" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Actual Quantity" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="intactualQty" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Unit" required style="width:100%">
+          <a-select v-model="intunitid" allowClear>
+            <a-select-option v-for="i in objUnits" :key="i.unitid" :value="i.unitid">{{i.unitname}}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Supplier" required style="width:100%">
+          <a-select v-model="intsupplierId" allowClear>
+            <a-select-option
+              v-for="i in objSupplier"
+              :key="i.supplierId"
+              :value="i.supplierId"
+            >{{i.name}}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Expiry Date" required style="width:100%">
+          <a-date-picker v-model="dtexpiryDate" style="width:100%" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+    <a-modal v-model="dialogAdd" centered title="Add New Item" :maskClosable="false">
+      <template slot="footer">
+        <a-button key="back" @click="dialogAdd=false">Cancel</a-button>
+        <a-button
+          :disabled="mCheckAdd()"
+          key="submit"
+          icon="save"
+          type="primary"
+          @click="mAddItem()"
+        >Update</a-button>
+      </template>
+      <a-form layout="inline" :label-col="{ span: 7 }" :wrapper-col="{ span: 17 }">
+        <a-form-item labelAlign="left" label="Item Code" required style="width:100%">
+          <a-input v-model="objNewItem.itemcode"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Item Name" required style="width:100%">
+          <a-input v-model="objNewItem.itemname"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Actual Price" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="objNewItem.actualprice" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Price" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="objNewItem.price" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Maximum Quantity" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="objNewItem.minimumQty" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Actual Quantity" required style="width:100%">
+          <a-input-number :min="1" style="width:100%" v-model="objNewItem.actualQty" />
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Unit" required style="width:100%">
+          <a-select v-model="objNewItem.unitid" allowClear>
+            <a-select-option v-for="i in objUnits" :key="i.unitid" :value="i.unitid">{{i.unitname}}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Supplier" required style="width:100%">
+          <a-select v-model="objNewItem.supplierId" allowClear>
+            <a-select-option
+              v-for="i in objSupplier"
+              :key="i.supplierId"
+              :value="i.supplierId"
+            >{{i.name}}</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Expiry Date" required style="width:100%">
+          <a-date-picker v-model="objNewItem.expiryDate" style="width:100%" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+
+    <v-btn
+      bottom
+      color="green"
+      v-if="cFilterItems.length!=0"
+      dark
+      fab
+      fixed
+      right
+      @click="mAddNew()"
+    >
       <v-icon>mdi-plus</v-icon>
     </v-btn>
   </div>
@@ -332,6 +481,7 @@ export default {
   data() {
     return {
       dialogEdit: false,
+      blnEdit: false,
       dialogAdd: false,
       isDelete: false,
       intpageCount: 0,
@@ -340,13 +490,15 @@ export default {
       strFilterUnit: "",
       stritemcode: "",
       stritemname: "",
+      intAddQty: 0,
+      intDeductQty: 0,
       intminimumQty: 0,
       intactualQty: 0,
       intactualprice: 0,
       intprice: 0,
       intunitid: 0,
       intsupplierId: 0,
-      dtexpiryDate: "",
+      dtexpiryDate: null,
       items: [],
       objItem: {},
       objUnits: [],
@@ -410,12 +562,48 @@ export default {
   created() {
     this.mGetData();
   },
+  computed: {
+    cFilterItems() {
+      let data = this.items;
+      if (this.strFilterItem != undefined && this.strFilterItem != "") {
+        data = data.filter(rec => {
+          return (
+            rec.itemcode.includes(this.strFilterItem) ||
+            rec.itemname.includes(this.strFilterItem)
+          );
+        });
+      }
+      return data;
+    },
+    cPercentage() {
+      // let value = this.intminimumQty * 2;
+      return (this.intactualQty / this.intminimumQty) * 100;
+    }
+  },
   methods: {
     moment,
+    mChangeSpace(el) {
+      return el.replace(/ /gi, "");
+    },
+    mChangeSearch() {
+      if (this.strFilterItem == "") {
+        this.strFilterItem = undefined;
+      }
+      if (this.cFilterItems.length != 0) {
+        this.mEdit(this.cFilterItems[0]);
+      }
+    },
     mGetData() {
-      axios.get(this.url + `itemsMaster`).then(res => {
-        this.items = res.data;
-      });
+      axios
+        .get(this.url + `itemsMaster`)
+        .then(res => {
+          this.items = res.data;
+          this.mEdit(this.items[0]);
+          this.mChangeSearch();
+        })
+        .catch(err => {
+          console.log(err);
+        });
       axios.get(this.url + `units`).then(res => {
         this.objUnits = res.data;
       });
@@ -434,7 +622,10 @@ export default {
       this.intunitid = item.unitid;
       this.intsupplierId = item.supplierId;
       this.dtexpiryDate = moment(item.expiryDate).format("YYYY-MM-DD");
-      this.dialogEdit = true;
+      // this.dialogEdit = true;
+      this.blnEdit = false;
+      this.intAddQty = 0;
+      this.intDeductQty = 0;
     },
     mAddNew() {
       this.objNewItem = {};
@@ -527,19 +718,34 @@ export default {
           });
         }
         this.mGetData();
-        this.dialogEdit = false;
+
+        // this.dialogEdit = false;
+        this.blnEdit = false;
       });
     },
-    mFilterItems() {
-      return this.items.filter(data => {
-        return (
-          data.itemcode
-            .toUpperCase()
-            .includes(this.strFilterItem.toUpperCase()) ||
-          data.itemname.toUpperCase().includes(this.strFilterItem.toUpperCase())
-        );
+    mAddMinusItem(type) {
+      this.objNewItem.type = type;
+      this.objNewItem.AddQTY = this.intAddQty;
+      this.objNewItem.DeductQTY = this.intDeductQty;
+
+      axios.post(this.url + `AddMinusItems/`, this.objNewItem).then(res => {
+        if (res.data.itemId == this.objNewItem.itemId) {
+          this.$notification.success({
+            message: this.gSystemTitle,
+            description: "Successfully Update"
+          });
+        } else {
+          this.$notification.error({
+            message: this.gSystemTitle,
+            description: "Error in Update.Please try again."
+          });
+        }
+        this.mGetData();
+        // this.dialogEdit = false;
+        this.blnEdit = false;
       });
     },
+
     mgetUnit(unitid) {
       let unitName = this.objUnits.find(rec => rec.unitid == unitid);
       if (unitName != undefined) {
@@ -576,3 +782,25 @@ export default {
   }
 };
 </script>
+<style>
+#MyCard {
+  max-height: calc(100vh - 120px);
+  min-height: calc(100vh - 120px);
+  overflow-y: auto;
+  overflow-x: auto;
+}
+#MyDiv2 {
+  max-height: calc(100vh - 250px);
+  min-height: calc(100vh - 250px);
+  overflow-y: auto;
+  overflow-x: auto;
+}
+#MyDiv2 .ant-list-item:hover {
+  background-color: #eeeeea;
+  cursor: pointer;
+}
+.v-application ul,
+.v-application ol {
+  padding-left: 0px;
+}
+</style> G

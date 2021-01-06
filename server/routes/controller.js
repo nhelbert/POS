@@ -240,6 +240,38 @@ router.post('/insertsupplier', function (req, res) {
         res.send(err)
     })
 })
+router.post('/deleteunits', (req, res) => {
+    let userdata = req.body
+    knex('units')
+        .where('unitid', userdata.unitid)
+        .del()
+        .then(data => {
+            res.send(userdata)
+        })
+        .catch(err => { res.send(err) })
+})
+router.post('/updatesunits', function (req, res) {
+    let userdata = req.body
+    knex('units')
+        .where('unitid', userdata.unitid)
+        .update({
+            unitname: userdata.unitname,
+        }).then(body => {
+            res.send(userdata)
+        }).catch((err) => {
+            res.send(err)
+        })
+})
+router.post('/insertunits', function (req, res) {
+    let userdata = req.body
+    knex('units').insert({
+        unitname: userdata.unitname,
+    }).then(body => {
+        res.send(userdata)
+    }).catch((err) => {
+        res.send(err)
+    })
+})
 router.post('/deletecustomers', (req, res) => {
     let userdata = req.body
     knex('customers')
@@ -305,6 +337,28 @@ router.post('/updateitems', function (req, res) {
         }).catch((err) => {
             res.send(err)
         })
+})
+router.post('/AddMinusItems', function (req, res) {
+    let userdata = req.body
+    knex('items')
+        .where('itemId', userdata.itemId)
+        .then(body => {
+            let oldData = body[0].actualQty
+            let addQTY = parseFloat(userdata.AddQTY) + parseFloat(oldData);
+            let minusQTY = parseFloat(oldData) - parseFloat(userdata.DeductQTY)
+            knex('items')
+                .where('itemId', userdata.itemId)
+                .update({
+                    actualQty: userdata.type == 1 ? addQTY : minusQTY
+                }).then(body => {
+                    res.send(userdata)
+                }).catch((err) => {
+                    res.send(err)
+                })
+        }).catch((err) => {
+            res.send(err)
+        })
+
 })
 router.post('/insertitems', function (req, res) {
     let userdata = req.body

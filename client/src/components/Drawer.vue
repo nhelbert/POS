@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-app-bar color="transparent" dense elevation="1">
+    <v-app-bar dense elevation="1">
       <v-img
         height="50"
         position="left center"
@@ -98,6 +98,11 @@ export default {
           id: 3,
           icon: "mdi-account",
           text: "Customers Master"
+        },
+        {
+          id: 4,
+          icon: "mdi-account",
+          text: "Unit Master"
         }
       ],
       objProduct: [

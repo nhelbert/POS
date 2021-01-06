@@ -253,7 +253,7 @@
             <div style="text-align:center;font-size:12px">Tel: 123-4567-890</div>
             <br />
             <div style="text-align:left;font-size:12px">Invoice No. : {{sale_transaction.invoiceNo}}</div>
-            <div style="text-align:left;font-size:12px">Cashier : {{username}}</div>
+            <div style="text-align:left;font-size:12px">Cashier : {{cUserName}}</div>
             <div style="text-align:left;font-size:12px">Date : {{sale_transaction.dateEntry}}</div>
 
             <div style="width:100%;text-align:left;border-top: 1px dashed black"></div>
@@ -271,11 +271,21 @@
                 </thead>
                 <tbody>
                   <tr v-for="item in sales_product" :key="item.code">
-                    <td style="border:0;text-align:center">{{item.qty}}</td>
-                    <td style="border:0">{{mgetUnit(item)}}</td>
-                    <td style="border:0">{{mgetItemName(item)}}</td>
-                    <td style="border:0;text-align:center">{{mgetPrice(item)}}</td>
-                    <td style="border:0;text-align:center">{{mgetAmount(item)}}</td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{item.qty}}</h5>
+                    </td>
+                    <td style="border:0">
+                      <h5>{{mgetUnit(item)}}</h5>
+                    </td>
+                    <td style="border:0">
+                      <h5>{{mgetItemName(item)}}</h5>
+                    </td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{mgetPrice(item)}}</h5>
+                    </td>
+                    <td style="border:0;text-align:center">
+                      <h5>{{mgetAmount(item)}}</h5>
+                    </td>
                   </tr>
                 </tbody>
               </template>
@@ -336,7 +346,6 @@ export default {
       intCash: "",
       userId: "",
       usertype: "",
-      username: "",
       useravatar: "",
       strItemsSearch: "",
       sales_product: [],

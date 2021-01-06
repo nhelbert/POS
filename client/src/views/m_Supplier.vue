@@ -180,7 +180,7 @@
           icon="save"
           type="primary"
           @click="mAddSupplier()"
-        >Update</a-button>
+        >Add</a-button>
       </template>
       <a-form layout="inline" :label-col="{ span: 7 }" :wrapper-col="{ span: 17 }">
         <a-form-item labelAlign="left" label="Name" required style="width:100%">

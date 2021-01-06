@@ -148,85 +148,46 @@
       </v-col>
     </v-row>-->
 
-    <v-dialog v-model="dialogEdit" persistent max-width="700px">
-      <v-card id="card">
-        <v-card-title>
-          <span style="color:blue">Edit Customer</span>
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <v-text-field dense outlined hide-details v-model="strName" label="Name"></v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field dense outlined hide-details v-model="strContact" label="Contact"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <v-btn color="error" block class="mt-2" @click="dialogEdit = false">Cancel</v-btn>
-            </v-col>
-            <v-col>
-              <v-btn
-                :disabled="mCheckEdit()"
-                color="primary"
-                block
-                class="mt-2"
-                @click="mUpdateCustomers()"
-              >
-                <v-icon>mdi-content-save-edit</v-icon>Update
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <v-dialog v-model="dialogAdd" persistent max-width="700px">
-      <v-card id="card">
-        <v-card-title>
-          <span style="color:blue">Add New Customer</span>
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewCustomersData.Fullname"
-                label="Name"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12">
-              <v-text-field
-                dense
-                outlined
-                hide-details
-                v-model="objNewCustomersData.Contact"
-                label="Contact"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
-              <v-btn color="error" block class="mt-2" @click="dialogAdd = false">Cancel</v-btn>
-            </v-col>
-            <v-col>
-              <v-btn
-                :disabled="mCheckAdd()"
-                color="primary"
-                block
-                class="mt-2"
-                @click="mAddCustomers()"
-              >
-                <v-icon>mdi-content-save-edit</v-icon>Save
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+    <a-modal v-model="dialogEdit" centered title="Edit Customer" :maskClosable="false">
+      <template slot="footer">
+        <a-button key="back" @click="dialogEdit=false">Cancel</a-button>
+        <a-button
+          :disabled="mCheckEdit()"
+          key="submit"
+          icon="save"
+          type="primary"
+          @click="mUpdateCustomers()"
+        >Update</a-button>
+      </template>
+      <a-form layout="inline" :label-col="{ span: 7 }" :wrapper-col="{ span: 17 }">
+        <a-form-item labelAlign="left" label="Name" required style="width:100%">
+          <a-input v-model="strName"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Contact" required style="width:100%">
+          <a-input v-model="strContact"></a-input>
+        </a-form-item>
+      </a-form>
+    </a-modal>
+    <a-modal v-model="dialogAdd" centered title="Add New Customer" :maskClosable="false">
+      <template slot="footer">
+        <a-button key="back" @click="dialogAdd=false">Cancel</a-button>
+        <a-button
+          :disabled="mCheckAdd()"
+          key="submit"
+          icon="save"
+          type="primary"
+          @click="mAddCustomers()"
+        >Add</a-button>
+      </template>
+      <a-form layout="inline" :label-col="{ span: 7 }" :wrapper-col="{ span: 17 }">
+        <a-form-item labelAlign="left" label="Name" required style="width:100%">
+          <a-input v-model="objNewCustomersData.Fullname"></a-input>
+        </a-form-item>
+        <a-form-item labelAlign="left" label="Contact" required style="width:100%">
+          <a-input v-model="objNewCustomersData.Contact"></a-input>
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
     <v-btn bottom color="green" dark fab fixed right @click="mAddNew()">
       <v-icon>mdi-plus</v-icon>
